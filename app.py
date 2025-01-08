@@ -118,11 +118,11 @@ def notifications_page():
         ui.label('No one has liked you yet.')
 
 # Routes for pages
-ui.page('/login', login_page)
-ui.page('/swipe', swipe_page)
-ui.page('/liked', liked_profiles_page)
-ui.page('/chat', chat_page)
-ui.page('/notifications', notifications_page)
+ui.page('/login', login_page)  # Correct usage
+ui.page('/swipe', swipe_page)  # Correct usage
+ui.page('/liked', liked_profiles_page)  # Correct usage
+ui.page('/chat', chat_page)  # Correct usage
+ui.page('/notifications', notifications_page)  # Correct usage
 
 # Run the app
 ui.run()
