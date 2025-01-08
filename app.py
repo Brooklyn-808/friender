@@ -2,14 +2,14 @@ from nicegui import ui
 from uuid import uuid4
 from datetime import datetime
 
-# Mock user database (You should replace this with a real database in production)
-users_db = {}
+# Mock user database with passwords (replace with a real database in production)
+users_db = {
+    'user1': {'username': 'Alice', 'password': 'password1', 'avatar': 'https://robohash.org/alice'},
+    'user2': {'username': 'Bob', 'password': 'password2', 'avatar': 'https://robohash.org/bob'}
+}
+
 liked_profiles = {}
 chats = {}
-
-# Sample users
-users_db['user1'] = {'username': 'Alice', 'avatar': 'https://robohash.org/alice'}
-users_db['user2'] = {'username': 'Bob', 'avatar': 'https://robohash.org/bob'}
 
 # Define user session data
 session = {}
@@ -19,20 +19,45 @@ def login_page():
     ui.label('Login Page').style('font-size: 24px')
     username_input = ui.textbox('Username')
     password_input = ui.textbox('Password', type='password')
-    ui.button('Login', on_click=lambda: login(username_input.value))
+    ui.button('Login', on_click=lambda: login(username_input.value, password_input.value))
+    ui.button('Sign Up', on_click=lambda: ui.redirect('/signup'))
 
-def login(username):
+def login(username, password):
     if username in users_db:
-        session['user'] = username
-        ui.page('/swipe')  # Navigate to swipe page
+        if users_db[username]['password'] == password:
+            session['user'] = username
+            ui.redirect('/swipe')  # Redirect to swipe page
+        else:
+            ui.label('Incorrect password. Please try again.').style('color: red')
     else:
         ui.label('User not found, please try again.').style('color: red')
+
+# Signup page
+def signup_page():
+    ui.label('Sign Up Page').style('font-size: 24px')
+    username_input = ui.textbox('Username')
+    password_input = ui.textbox('Password', type='password')
+    confirm_password_input = ui.textbox('Confirm Password', type='password')
+    
+    ui.button('Sign Up', on_click=lambda: signup(username_input.value, password_input.value, confirm_password_input.value))
+
+def signup(username, password, confirm_password):
+    if username in users_db:
+        ui.label('Username already exists. Please choose a different username.').style('color: red')
+    elif password != confirm_password:
+        ui.label('Passwords do not match. Please try again.').style('color: red')
+    elif username and password:  # Make sure fields are not empty
+        users_db[username] = {'username': username, 'password': password, 'avatar': f'https://robohash.org/{username}'}
+        ui.label('Account created successfully! Please log in.').style('color: green')
+        ui.redirect('/login')
+    else:
+        ui.label('Please fill in all fields.').style('color: red')
 
 # Swipe page
 def swipe_page():
     user = session.get('user')
     if user is None:
-        ui.page('/login')  # Redirect to login page if not logged in
+        ui.redirect('/login')  # Redirect to login page if not logged in
         return
 
     ui.label(f'Welcome {users_db[user]["username"]}').style('font-size: 24px')
@@ -64,7 +89,7 @@ def like_profile(profile_id):
 def liked_profiles_page():
     user = session.get('user')
     if user is None:
-        ui.page('/login')  # Redirect to login page if not logged in
+        ui.redirect('/login')  # Redirect to login page if not logged in
         return
 
     ui.label(f'Profiles liked by {users_db[user]["username"]}').style('font-size: 24px')
@@ -81,7 +106,7 @@ def liked_profiles_page():
 def chat_page():
     user = session.get('user')
     if user is None:
-        ui.page('/login')  # Redirect to login page if not logged in
+        ui.redirect('/login')  # Redirect to login page if not logged in
         return
 
     ui.label(f'Chat with liked profiles of {users_db[user]["username"]}').style('font-size: 24px')
@@ -107,7 +132,7 @@ def send_message(user, message, chats):
 def notifications_page():
     user = session.get('user')
     if user is None:
-        ui.page('/login')  # Redirect to login page if not logged in
+        ui.redirect('/login')  # Redirect to login page if not logged in
         return
 
     ui.label(f'Notifications for {users_db[user]["username"]}').style('font-size: 24px')
@@ -117,12 +142,13 @@ def notifications_page():
     else:
         ui.label('No one has liked you yet.')
 
-# Routes for pages
-ui.page('/login', login_page)  # Correct usage
-ui.page('/swipe', swipe_page)  # Correct usage
-ui.page('/liked', liked_profiles_page)  # Correct usage
-ui.page('/chat', chat_page)  # Correct usage
-ui.page('/notifications', notifications_page)  # Correct usage
+# Routes for pages using ui.router()
+ui.router('/login', login_page)
+ui.router('/signup', signup_page)
+ui.router('/swipe', swipe_page)
+ui.router('/liked', liked_profiles_page)
+ui.router('/chat', chat_page)
+ui.router('/notifications', notifications_page)
 
 # Run the app
 ui.run()
